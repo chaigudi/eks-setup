@@ -12,16 +12,20 @@ module "label" {
 }
 
 locals {
+  cluster_name = module.label.id
+
   tags = {
-    "kubernetes.io/cluster/${module.label.id}" = "shared"
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
   }
 
   public_subnets_additional_tags = {
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                      = "1"
   }
 
   private_subnets_additional_tags = {
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"             = "1"
   }
 }
 
@@ -118,9 +122,9 @@ module "eks_node_group" {
   max_size     = var.max_size
   desired_size = var.desired_size
 
-  capacity_type     = "ON_DEMAND"
-  health_check_type = var.health_check_type
-  cluster_name      = module.eks_cluster.eks_cluster_id
+  capacity_type = "ON_DEMAND"
+
+  cluster_name = module.eks_cluster.eks_cluster_id
 
   block_device_map = {
     "/dev/xvda" = {
@@ -131,8 +135,6 @@ module "eks_node_group" {
       }
     }
   }
-
-  node_repair_enabled = true
 
   context = module.label.context
 }
